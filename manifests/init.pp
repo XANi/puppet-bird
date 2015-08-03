@@ -138,7 +138,7 @@ define bird::conf (
     }
 
     $padded_prio = sprintf('%04d',$prio) # 4 -> 0004
-    file {"/etc/bird/v${version}/${padded_prio}-${title}.conf":
+    file {"/etc/bird/v${version}.d/${padded_prio}-${title}.conf":
         content => $content,
         owner   => bird,
         group   => bird,
