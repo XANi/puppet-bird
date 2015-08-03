@@ -43,6 +43,7 @@ class bird (
     $version = "installed",
     $service_ipv4 = true,
     $service_ipv4 = false,
+    $router_id = $ipaddress,
 )   {
     package {"bird":
         ensure => $version
@@ -70,5 +71,47 @@ class bird (
             ensure => stopped,
             enable => false,
         }
+    }
+}
+
+class bird::v4::conf {
+    require bird
+    $router_id = $bird::router_id
+    File {
+        mode => 644,
+        owner  => bird,
+        group  => bird,
+    }
+    file {'/etc/bird/v4.d':
+        ensure => directory,
+        purge  => true,
+        recurse => true,
+    }
+    file {'/etc/bird/bird.conf':
+        content => template('bird/bird.conf'),
+    }
+    exec { 'reload-bird':
+        onlyif     => '/usr/sbin/bird -p -c /etc/bird/bird.conf',
+        command    => 'systemctl reload bird',
+        notifyonly => true
+    }
+    Service
+
+}
+
+define bird::conf (
+    $version = "4",
+    $prio = '1000',
+    $content,
+)   {
+    require bird
+
+    $padded_prio = sprintf('%04d',$prio) # 4 -> 0004
+    file {"/etc/bird/v${version}/${padded_prio}-${title}.conf":
+        content => $content,
+        owner   => bird,
+        group   => bird,
+        mode    => 640,
+#        notify  => Exec['reload-bird'],
     }
 }
