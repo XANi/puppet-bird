@@ -117,7 +117,7 @@ class bird::v6::conf {
     exec { 'reload-bird':
         onlyif     => '/usr/sbin/bird6 -p -c /etc/bird/bird6.conf',
         command    => 'systemctl reload bird6',
-        notifyonly => true
+        refreshonly => true
     }
 }
 
