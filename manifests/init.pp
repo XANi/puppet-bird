@@ -72,6 +72,7 @@ class bird (
             enable => false,
         }
     }
+    include bird::v4::conf
 }
 
 class bird::v4::conf {
@@ -97,12 +98,44 @@ class bird::v4::conf {
     }
 }
 
+class bird::v6::conf {
+    require bird
+    $router_id = $bird::router_id
+    File {
+        mode => 644,
+        owner  => bird,
+        group  => bird,
+    }
+    file {'/etc/bird/v6.d':
+        ensure => directory,
+        purge  => true,
+        recurse => true,
+    }
+    file {'/etc/bird/bird6.conf':
+        content => template('bird/bird6.conf'),
+    }
+    exec { 'reload-bird':
+        onlyif     => '/usr/sbin/bird6 -p -c /etc/bird/bird6.conf',
+        command    => 'systemctl reload bird6',
+        notifyonly => true
+    }
+}
+
 define bird::conf (
     $version = "4",
     $prio = '1000',
     $content,
 )   {
     require bird
+    if $version == 4 {
+        include bird::v4::conf
+    }
+    elsif $version == 6 {
+        include bird::v6::conf
+    }
+    else {
+        fail('bad version')
+    }
 
     $padded_prio = sprintf('%04d',$prio) # 4 -> 0004
     file {"/etc/bird/v${version}/${padded_prio}-${title}.conf":
