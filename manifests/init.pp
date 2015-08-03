@@ -114,7 +114,7 @@ define bird::conf (
     }
 }
 
-define bird::osfp (
+define bird::ospf (
     $ospf_name = $title,
     $rfc1583compat = true,
     $stub = false,
