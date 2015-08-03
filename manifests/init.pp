@@ -45,6 +45,30 @@ class bird (
     $service_ipv4 = false,
 )   {
     package {"bird":
-        version => installed
+        ensure => $version
+    }
+    if $service_ipv4 {
+        service {'bird':
+            ensure => running,
+            enable => true,
+        }
+    }
+    else {
+        service {'bird':
+            ensure => stopped,
+            enable => false,
+        }
+    }
+    if $service_ipv6 {
+        service {'bird6':
+            ensure => running,
+            enable => true,
+        }
+    }
+    else {
+        service {'bird6':
+            ensure => stopped,
+            enable => false,
+        }
     }
 }
