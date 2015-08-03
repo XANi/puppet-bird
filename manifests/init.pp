@@ -115,3 +115,17 @@ define bird::conf (
 #        notify  => Exec['reload-bird'],
     }
 }
+
+define bird::osfp (
+    $ospf_name = $title,
+    $rfc1583compat = true,
+    $stub = false,
+    $tick = 1,
+    $ecmp = false,
+    $areas,
+)   {
+
+    bird::conf{"ospf-${title}":
+        content => template("bird/ospf.conf"),
+    }
+}
