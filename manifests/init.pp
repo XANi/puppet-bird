@@ -121,10 +121,10 @@ class bird::v6::conf {
     }
 }
 
-define bird::conf (
+define bird::config (
     $version = "4",
     $prio = '1000',
-    $content,
+    $config,
 )   {
     require bird
     if $version == 4 {
@@ -139,24 +139,10 @@ define bird::conf (
 
     $padded_prio = sprintf('%04d',$prio) # 4 -> 0004
     file {"/etc/bird/v${version}.d/${padded_prio}-${title}.conf":
-        content => $content,
+        content => template('bird/part.conf'),
         owner   => bird,
         group   => bird,
         mode    => 640,
 #        notify  => Exec['reload-bird'],
-    }
-}
-
-define bird::ospf (
-    $ospf_name = $title,
-    $rfc1583compat = true,
-    $stub = false,
-    $tick = 1,
-    $ecmp = false,
-    $areas,
-)   {
-
-    bird::conf{"ospf-${title}":
-        content => template("bird/ospf.conf"),
     }
 }
