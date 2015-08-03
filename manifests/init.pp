@@ -95,8 +95,6 @@ class bird::v4::conf {
         command    => 'systemctl reload bird',
         notifyonly => true
     }
-    Service
-
 }
 
 define bird::conf (
