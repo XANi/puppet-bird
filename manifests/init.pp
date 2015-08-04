@@ -92,9 +92,16 @@ class bird::v4::conf {
         content => template('bird/bird.conf'),
     }
     exec { 'reload-bird':
-        onlyif     => '/usr/sbin/bird -p -c /etc/bird/bird.conf',
-        command    => 'systemctl reload bird',
-        refreshonly => true
+        onlyif      => '/usr/sbin/bird -p -c /etc/bird/bird.conf',
+        command     => 'systemctl reload bird',
+        require     => Exec['validate-bird'],
+        refreshonly => true,
+    }
+    # this is here so there will be alert when config is bad
+    exec { 'validate-bird':
+        unless     => '/usr/sbin/bird -p -c /etc/bird/bird.conf',
+        command    => '/usr/sbin/bird -p -c /etc/bird/bird.conf',
+        logoutput  => true,
     }
 }
 
@@ -143,6 +150,6 @@ define bird::config (
         owner   => bird,
         group   => bird,
         mode    => 640,
-#        notify  => Exec['reload-bird'],
+        notify  => Exec['reload-bird'],
     }
 }
