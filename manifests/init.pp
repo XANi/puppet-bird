@@ -42,7 +42,7 @@
 class bird (
     $version = "installed",
     $service_ipv4 = true,
-    $service_ipv4 = false,
+    $service_ipv6 = false,
     $router_id = $ipaddress,
 )   {
     package {"bird":
