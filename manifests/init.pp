@@ -92,7 +92,6 @@ class bird::v4::conf {
         content => template('bird/bird.conf'),
     }
     exec { 'reload-bird':
-        onlyif      => '/usr/sbin/bird -p -c /etc/bird/bird.conf',
         command     => 'systemctl reload bird',
         require     => Exec['validate-bird'],
         refreshonly => true,
