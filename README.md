@@ -68,3 +68,35 @@ only "device" protocol is included in main file so minimal config would look som
             ]
         }
     }
+
+# Reference
+
+Underlying ruby code in template converts data structures into bird config:
+
+* array will get converted into lines ending with ';', e.g. ['import all','export all'] will become
+
+    import all;
+    export all;
+
+* hash with other hash or array as value gets converted into {}-enclosed block, e.g. `'interface "eth*"' => ['authentication none'] ` will become
+
+    interface "eth*" {
+        authentication none;
+    };
+
+* hash with string/int/bool as value will become single line, e.g. `stub => false` will become `stub no;`.
+  * Non-number values will be in `""`
+  * pure numbers will be unquoted.
+  * `true` will be converted to `yes` while false to `no`.
+  * `undef` will just use whole key as string (when you dont want the auto-quoting at all
+
+** WARNING!!! ** due to how bird config works, `export all` and `export "all"` is **NOT** same (2nd one will trigger parse error). It is recommended to use arrays and hashes with arrays as values. It also guarantees constant order
+
+## Limitations
+
+Tested only under Debian 8 (Jessie)
+
+
+## Development
+
+Pull requests and bug reports welcome
