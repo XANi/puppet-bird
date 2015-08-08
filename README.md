@@ -3,11 +3,7 @@
 #### Table of Contents
 
 1. [Overview](#overview)
-2. [Module Description - What the module does and why it is useful](#module-description)
 3. [Setup - The basics of getting started with bird](#setup)
-    * [What bird affects](#what-bird-affects)
-    * [Setup requirements](#setup-requirements)
-    * [Beginning with bird](#beginning-with-bird)
 4. [Usage - Configuration options and additional functionality](#usage)
 5. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
 5. [Limitations - OS compatibility, etc.](#limitations)
@@ -15,65 +11,60 @@
 
 ## Overview
 
-A one-maybe-two sentence summary of what the module does/what problem it solves.
-This is your 30 second elevator pitch for your module. Consider including
-OS/Puppet version it works with.
+Module for managing BIRD routing daemon configuration via puppet
 
 ## Module Description
 
-If applicable, this section should have a brief description of the technology
-the module integrates with and what that integration enables. This section
-should answer the questions: "What does this module *do*?" and "Why would I use
-it?"
-
-If your module has a range of functionality (installation, configuration,
-management, etc.) this is the time to mention it.
+Module takes as an input simple configuration hash and generates a snippet of BIRD configuration and if it is valid, reloads daemon
 
 ## Setup
 
-### What bird affects
+By default defines will install current version of bird and run IPv4 daemon (ipv6 is WiP). For override either specify parameters via hiera/enc or specify it in class **before** any define like that:
 
-* A list of files, packages, services, or operations that the module will alter,
-  impact, or execute on the system it's installed on.
-* This is a great place to stick any warnings.
-* Can be in list or paragraph form.
+    class {"bird":
+        version => "installed",
+        $service_ipv4 => true,
+        $service_ipv6 => true,
+        $router_id    => '1.2.3.4'
+    }
 
-### Setup Requirements **OPTIONAL**
+Files are generated in `/etc/bird/v4.d` and `/etc/bird/v6.d` directories and included from main one
 
-If your module requires anything extra before setting up (pluginsync enabled,
-etc.), mention it here.
+only "device" protocol is included in main file so minimal config would look something like that:
 
-### Beginning with bird
+    # import direct routes
+    bird::config {'direct':
+        config => {
+            "protocol direct" => [
+                                  'interface "eth*"',
+                                  ]
+        }
+    }
+    # import all we get
+    bird::config {'ospf-main':
+        config => {
+            'protocol ospf main' => [
+                'import all',
+                'export all',
+                {'area 0.0.0.0' => {
+                    "stub" => false,
+                    'interface "eth2"' => [
+                        "authentication none",
+                    ],
+                }}
+             ],
 
-The very basic steps needed for a user to get the module up and running.
-
-If your most recent release breaks compatibility or requires particular steps
-for upgrading, you may wish to include an additional section here: Upgrading
-(For an example, see http://forge.puppetlabs.com/puppetlabs/firewall).
-
-## Usage
-
-Put the classes, types, and resources for customizing, configuring, and doing
-the fancy stuff with your module here.
-
-## Reference
-
-Here, list the classes, types, providers, facts, etc contained in your module.
-This section should include all of the under-the-hood workings of your module so
-people know what the module is touching on their system but don't need to mess
-with things. (We are working on automating this section!)
-
-## Limitations
-
-This is where you list OS compatibility, version compatibility, etc.
-
-## Development
-
-Since your module is awesome, other users will want to play with it. Let them
-know what the ground rules for contributing are.
-
-## Release Notes/Contributors/Etc **Optional**
-
-If you aren't using changelog, put your release notes here (though you should
-consider using changelog). You may also add any additional sections you feel are
-necessary or important to include here. Please use the `## ` header.
+            },
+    }
+    # export all to kernel. learn admin-added static routes. do not remove routes on restart
+    bird::config{'kernel':
+        config => {
+            "protocol kernel" => [
+                "learn",
+                "persist",
+                "graceful restart on",
+                "import all",
+                "export all",
+            ]
+        }
+    }
