@@ -90,7 +90,7 @@ Underlying ruby code in template converts data structures into bird config:
   * `true` will be converted to `yes` while false to `no`.
   * `undef` will just use whole key as string (when you dont want the auto-quoting at all
 
-** WARNING!!! ** due to how bird config works, `export all` and `export "all"` is **NOT** same (2nd one will trigger parse error). It is recommended to use arrays and hashes with arrays as values. It also guarantees constant order
+**WARNING!!!** due to how bird config works, `export all` and `export "all"` is **NOT** same (2nd one will trigger parse error). It is recommended to use arrays and hashes with arrays as values. It also guarantees constant order.
 
 ## Limitations
 
