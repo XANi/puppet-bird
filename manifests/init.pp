@@ -79,7 +79,7 @@ class bird::v4::conf {
     require bird
     $router_id = $bird::router_id
     File {
-        mode => 644,
+        mode => "644",
         owner  => bird,
         group  => bird,
     }
@@ -108,7 +108,7 @@ class bird::v6::conf {
     require bird
     $router_id = $bird::router_id
     File {
-        mode => 644,
+        mode => "644",
         owner  => bird,
         group  => bird,
     }
@@ -148,7 +148,7 @@ define bird::config (
         content => template('bird/part.conf'),
         owner   => bird,
         group   => bird,
-        mode    => 640,
+        mode    => "640",
         notify  => Exec['reload-bird'],
     }
 }
