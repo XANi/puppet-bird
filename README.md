@@ -69,6 +69,12 @@ only "device" protocol is included in main file so minimal config would look som
         }
     }
 
+Config priorities are supported via ``prio``, defaults to:
+
+* `500` if name contains "filter", filters must be defined first before using them
+* `999` if name contains "bfd"
+* `1000` if none of above
+
 # Reference
 
 Underlying ruby code in template converts data structures into bird config:
@@ -94,7 +100,7 @@ Underlying ruby code in template converts data structures into bird config:
 
 ## Limitations
 
-Tested only under Debian 8 (Jessie)
+Tested only under Debian 8 (Jessie) and a bit of centos, no ipv6 (altho it should be pretty straightforward to add)
 
 
 ## Development

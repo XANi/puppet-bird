@@ -48,31 +48,48 @@ class bird (
     package {"bird":
         ensure => $version
     }
+    if $osfamily == 'RedHat' {
+        include bird::centos
+    }
+    include bird::v4::conf
+    class  { 'bird::service':
+        service_ipv4 => $service_ipv4,
+        service_ipv6 => $service_ipv6;
+    }
+}
+
+class bird::service (
+    $service_ipv4 = true,
+    $service_ipv6 = false,
+    ) {
     if $service_ipv4 {
         service {'bird':
             ensure => running,
             enable => true,
+            require => Package['bird'],
         }
     }
     else {
         service {'bird':
             ensure => stopped,
             enable => false,
+            require => Package['bird'],
         }
     }
     if $service_ipv6 {
         service {'bird6':
             ensure => running,
             enable => true,
+            require => Package['bird'],
         }
     }
     else {
         service {'bird6':
             ensure => stopped,
             enable => false,
+            require => Package['bird'],
         }
     }
-    include bird::v4::conf
 }
 
 class bird::v4::conf {
@@ -93,11 +110,11 @@ class bird::v4::conf {
     }
     exec { 'reload-bird':
         command     => 'systemctl reload bird',
-        require     => Exec['validate-bird'],
+        require     => Exec['validate-bird-config'],
         refreshonly => true,
     }
     # this is here so there will be alert when config is bad
-    exec { 'validate-bird':
+    exec { 'validate-bird-config':
         unless     => '/usr/sbin/bird -p -c /etc/bird/bird.conf',
         command    => '/usr/sbin/bird -p -c /etc/bird/bird.conf',
         logoutput  => true,
@@ -129,7 +146,7 @@ class bird::v6::conf {
 
 define bird::config (
     $version = "4",
-    $prio = '1000',
+    $prio = false,
     $config,
 )   {
     require bird
@@ -142,8 +159,23 @@ define bird::config (
     else {
         fail('bad version')
     }
+    if $prio {
+        $prio_c = $prio
+    }
+    else {
+        # filters need to be defined before they are used
+        if $title =~ /filter/ {
+            $prio_c = 500
+        }
+        elsif $title =~ /bfd/ {
+            $prio_c = 999
+        }
+        else {
+            $prio_c = 1000
+        }
+    }
 
-    $padded_prio = sprintf('%04d',$prio) # 4 -> 0004
+    $padded_prio = sprintf('%04d',$prio_c) # 4 -> 0004
     file {"/etc/bird/v${version}.d/${padded_prio}-${title}.conf":
         content => template('bird/part.conf'),
         owner   => bird,
@@ -151,4 +183,34 @@ define bird::config (
         mode    => "640",
         notify  => Exec['reload-bird'],
     }
+}
+
+
+class bird::centos {
+    File {
+        mode => 644,
+        owner  => bird,
+        group  => bird,
+    }
+
+    # fix centos crap (possibly fixed in later pacakages)
+    user { 'bird':
+        ensure => present,
+        shell  => '/bin/false',
+        system => true,
+    }
+    group { bird:
+        ensure   => present,
+        provider => groupadd,
+        system   => true,
+    }
+
+    file {'/etc/bird':
+        ensure => directory,
+    }
+    file {'/etc/bird.conf':
+        ensure => link,
+        target => '/etc/bird/bird.conf',
+    }
+
 }
