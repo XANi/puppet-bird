@@ -150,10 +150,10 @@ define bird::config (
     $config,
 )   {
     require bird
-    if $version == 4 {
+    if $version == 4 or $version=="4" {
         include bird::v4::conf
     }
-    elsif $version == 6 {
+    elsif $version == 6 or $version=="6" {
         include bird::v6::conf
     }
     else {
